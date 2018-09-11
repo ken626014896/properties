@@ -9,7 +9,7 @@ from scrapy.loader.processors import  MapCompose,Join
 
 
 class Spider1Spider(scrapy.Spider):
-    name="basic"
+    name="basic1"
     start_urls={
         'http://dg.zu.fang.com/chuzu/3_161939485_1.htm?channel=1,2',
 
