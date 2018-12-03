@@ -12,27 +12,18 @@ import time
 
 from selenium import webdriver
 
+
+#导入django数据库
+import django
+
+django.setup()
+from adminpage.models import Official
+from homepage.models import Category
+
 class Spider1Spider(scrapy.Spider):
     name="test1"
-    start_urls={
-        #养老
-        'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%E5%85%BB%E8%80%81&ie=utf8&_sug_=n&_sug_type_=',
-        #军事
-        'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%E5%86%9B%E4%BA%8B&ie=utf8&_sug_=n&_sug_type_=',
-        #科技
-        'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%E7%A7%91%E6%8A%80&ie=utf8&_sug_=y&_sug_type_=',
-        #娱乐
-        'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%E5%A8%B1%E4%B9%90&ie=utf8&_sug_=n&_sug_type_=',
-        #学习
-        'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%E5%AD%A6%E4%B9%A0&ie=utf8&_sug_=n&_sug_type_='
+    start_urls = ['https://www.baidu.com/']
 
-        # "http://weixin.sogou.com/weixin?type=1&s_from=input&query=%E7%AC%94%E5%90%A7%E8%AF%84%E6%B5%8B%E5%AE%A4&ie=utf8&_sug_=n&_sug_type_=",
-        # 'http://weixin.sogou.com/weixin?type=1&s_from=input&query=it%E4%B9%8B%E5%AE%B6&ie=utf8&_sug_=n&_sug_type_='
-
-        # 'http://weixin.sogou.com/weixin?query=%E7%A7%91%E6%8A%80&_sug_type_=&sut=960&lkt=0%2C0%2C0&s_from=input&_sug_=y&type=1&sst0=1537598169226&page=1&ie=utf8&w=01019900&dr=1',
-        # 'http://weixin.sogou.com/weixin?query=%E7%A7%91%E6%8A%80&_sug_type_=&sut=960&lkt=0%2C0%2C0&s_from=input&_sug_=y&type=1&sst0=1537598169226&page=2&ie=utf8&w=01019900&dr=1',
-
-    }
     custom_settings = {
 
         "COOKIES_ENABLED":False,
@@ -52,31 +43,58 @@ class Spider1Spider(scrapy.Spider):
     def closed(self, spider):
         print("spider closed")
         self.browser.close()
+    def parse(self, response):
+        sort_list = [x.sort for x in Category.objects.all()]
+        official_list = [{'name': x.name, 'sort': x.sort} for x in Official.objects.all()]
+        for sort in sort_list:
+            sort_url_name = urllib.parse.quote(sort)
+            home_url= 'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%s&ie=utf8&_sug_=n&_sug_type_='% sort_url_name
+            sort=None
 
-    def parse(self,response):
+            yield Request(home_url, callback=self.getHomepage, meta={"sort": sort})
+        for official in  official_list:
+            official_url_name = urllib.parse.quote(official.get('name'))
+            home_url = 'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%s&ie=utf8&_sug_=n&_sug_type_=' % official_url_name
+            sort =official.get('sort')
+
+
+            yield Request(home_url, callback=self.getHomepage, meta={"sort": sort})
+
+    def getHomepage(self,response):
         #因为公众号主页不断变化，所以要先查询再进去
-        # msg = response.xpath('//*[@class="p2"]/text()').extract()
-        # if (len(msg) != 0):
-        #     print (msg[0])
-        # page_url=response.xpath('//*[@class="tit"]/a/@href').extract()[0]
-        msg = response.xpath('//*[@class="p2"]/text()').extract()
-        if (len(msg) != 0):
-            print (msg[0])
-        page_url_list=response.xpath('//*[@class="tit"]/a/@href').extract()
-
-        #推送的类型
-        sort=response.xpath('//*[@class="query"]/@value').extract()
-
-        #只拿前三个公众号
-        temp=0
-        for  page_url in page_url_list:
 
 
-            if temp<=2:
-               temp = temp + 1
-               yield Request(page_url, callback=self.parse_next,meta={"sort": sort[0]})
-            else:
-                continue
+        #根据上层函数传来的sort是否有值，判断是默认爬虫的分类，还是管理员增加的公众号
+
+        hint=response.meta['sort']
+        if(hint==None):
+            msg = response.xpath('//*[@class="p2"]/text()').extract()
+            if (len(msg) != 0):
+                print (msg[0])
+            page_url_list=response.xpath('//*[@class="tit"]/a/@href').extract()
+
+            #推送的类型
+            sort=response.xpath('//*[@class="query"]/@value').extract()
+
+
+            #只拿前三个公众号
+            temp=0
+            for  page_url in page_url_list:
+
+
+                if temp<=2:
+                   temp = temp + 1
+                   yield Request(page_url, callback=self.parse_next,meta={"sort": sort[0]})
+        else:
+            msg = response.xpath('//*[@class="p2"]/text()').extract()
+            if (len(msg) != 0):
+                print(msg[0])
+            page_url_list = response.xpath('//*[@class="tit"]/a/@href').extract()
+
+            # 推送的类型
+            sort = hint
+
+            yield Request(page_url_list[0], callback=self.parse_next, meta={"sort": sort})
 
 
         #

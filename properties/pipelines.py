@@ -134,26 +134,7 @@ class jsonpelines(object):
     def process_item(self,item,spider):
 
         if(spider.name== 'test1'):
-            # # 首先筛选一下数据
-            #
-            # # 获取当前时间
-            # strtime = time.strftime('%Y.%m.%d', time.localtime(time.time()))
-            # listtime = strtime.split(".")
-            #
-            # # item发表时间
-            # pt = item["publish_time"]
-            #
-            # ptlist = re.split('[年月日]', pt[0])
-            #
-            # # 相差时间天数
-            # diff = int(listtime[2]) - int(ptlist[2])
-            # if int(listtime[1]) == int(ptlist[1]) and diff <= 1:
-            #     print (item["publish_time"])
-            #     lines = json.dumps(dict(item), ensure_ascii=False) + "\n"
-            #     self.file.write(lines)
-            #     return item
-            # else:
-            #     raise DropItem("Missing price in %s" % item)
+
 
             lines = json.dumps(dict(item), ensure_ascii=False) + "\n"
             self.file.write(lines)
@@ -166,18 +147,7 @@ class jsonpelines(object):
         self.file.close()
 
 
-import os, sys
-# 将django项目根目录加入环境变量
-parent_path = os.path.dirname('E:\python\wxproject\homepage')
-sys.path.append(parent_path)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wxproject.settings")
-import django
-
-django.setup()
-
-
-from homepage.models import Post
 
 class testpelines(object):
 
@@ -189,10 +159,7 @@ class testpelines(object):
     def process_item(self,item,spider):
 
         if(spider.name== 'test3'):
-            print(item['title'])
-            print(item['describe'])
-            print('成功调用django orm')
-            print(Post.objects.all().count())
+
             return item
         else:
             return item

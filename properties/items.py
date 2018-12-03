@@ -41,6 +41,16 @@ class PropertiesItem(scrapy.Item):
     temp1 =scrapy.Field()  #已用于存储全文样式
     temp2 =scrapy.Field()  #已用于存储图片名字
     temp3 =scrapy.Field()
-    pass
+    def getDict(self):
+        a={'title':self.title,
+           'come_from':self.come_from,
+           'publish_time':self.publish_time,
+           'describe':self.describe,
+           'img_url':self.img_url,
+           'author':self.author,
+           'sort':self.sort,
+           'temp1':self.temp1,
+           'temp2':self.temp2}
+        return a
 
 
