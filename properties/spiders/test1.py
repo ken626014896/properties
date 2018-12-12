@@ -195,11 +195,8 @@ class Spider1Spider(scrapy.Spider):
         # 爬取全部内容样式
         all_context=response.xpath('//*[@class="rich_media_content "]').extract()
         l.add_value("temp1", all_context[0])
-        #修改每张图片的地址
-        # i = 0
-        # for img in img_url_list:
-        #     img_url_list[i] = img + "&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1&retryload=1"
-        #     i = i + 1
+
+
 
         #判断出现空集时的操作
         if len(img_url_list) == 0 :
@@ -208,14 +205,7 @@ class Spider1Spider(scrapy.Spider):
             l.add_value("img_url_list",img_url_list)
 
 
-        # if len(context_list) == 0:
-        #     l.add_value("context_list", "无")
-        # else:
-        #     l.add_value("context_list", context_list)
 
-
-
-        # l.add_xpath("context_list", '//*[@class="rich_media_content "]/p/text()')
 
         return l.load_item()
 
