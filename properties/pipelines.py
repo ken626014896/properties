@@ -8,11 +8,19 @@ from scrapy import Request
 from scrapy.pipelines.images import ImagesPipeline
 import codecs
 import json
-import time
-import re
+import asyncio
 from  properties import  settings
 import os
 from  urllib  import  request
+from properties.items import PropertiesItem
+
+#导入django数据库
+import django
+
+django.setup()
+
+from homepage.models import Post
+
 class PropertiesPipeline(object):
     def __init__(self):
         pass
@@ -64,13 +72,14 @@ class JiandanPipeline(object):
             #下载正文图片
             for image_url in item['img_url_list']:
                 print('图片地址',image_url)
-                list_name = image_url.split('/')
-                file_name = list_name[len(list_name) - 2]  # 图片名称
-
-                #获取数据格式，判断是是jpg还是gif
-                whichformat=list_name[len(list_name) - 3]
-                img_format=whichformat.split('_')[1]
-                print('图片格式是', img_format)
+                # list_name = image_url.split('/')
+                # file_name = list_name[len(list_name) - 2]  # 图片名称
+                #
+                # #获取数据格式，判断是是jpg还是gif
+                # whichformat=list_name[len(list_name) - 3]
+                # img_format=whichformat.split('_')[1]
+                # print('图片格式是', img_format)
+                file_name,img_format=self.getNameAndFormat(image_url)
 
                 img_name=file_name+'.'+img_format
                 img_name_list.append(img_name)
@@ -97,17 +106,19 @@ class JiandanPipeline(object):
         else:
             return  item
 
+
+
     def download_img(self,item,dir_path):
             image_url =item['img_url'][0]
 
-            list_name = image_url.split('/')
-            file_name = list_name[len(list_name) - 2]  # 图片名称
-
-            # 获取数据格式，判断是是jpg还是png
-            whichformat = list_name[len(list_name) - 3]
-            #得到图片格式
-            img_format = whichformat.split('_')[1]
-
+            # list_name = image_url.split('/')
+            # file_name = list_name[len(list_name) - 2]  # 图片名称
+            #
+            # # 获取数据格式，判断是是jpg还是png
+            # whichformat = list_name[len(list_name) - 3]
+            # #得到图片格式
+            # img_format = whichformat.split('_')[1]
+            file_name, img_format = self.getNameAndFormat(image_url)
 
             img_name = file_name + '.' + img_format
 
@@ -122,30 +133,59 @@ class JiandanPipeline(object):
 
             return  img_name
 
+    def getNameAndFormat(self, img_url):
+        list_name = img_url.split('/')
+        file_name = list_name[len(list_name) - 2]  # 图片名称
 
-#导出为json数据的中间件
+        # 获取数据格式，判断是是jpg还是png
+        whichformat = list_name[len(list_name) - 3]
+        # 得到图片格式
+        img_format = whichformat.split('_')[1]
+
+        return file_name, img_format
+    # async midtemp
+    #
+    # def dowPicture(self,file_path,img_format,image_url):
+    #             with open(file_path + '.' + img_format, 'wb') as file_writer:
+    #                 conn = request.urlopen(image_url)  # 下载图片
+    #                 file_writer.write(conn.read())
+    #             file_writer.close()
+
+#导出到django数据库的中间件
 class jsonpelines(object):
 
 
     def __init__(self):
+        pass
     # 使用codecs模块的打开方式，可以指定编码打开，避免很多编码问题
-           self.file=codecs.open("dataio.json","w",encoding="utf-8")
+    #        self.file=codecs.open("dataio.json","w",encoding="utf-8")
 
     def process_item(self,item,spider):
 
         if(spider.name== 'test1'):
+            print('写入数据库')
+            Post.objects.get_or_create(title=item['title'][0],
+                                       come_from=item['come_from'][0],
+                                       publish_time=item['publish_time'][0],
+                                       describe=item['describe'][0],
+                                       img_url=item['img_url'][0],
+                                       author=item['author'][0],
+                                       sort=item['sort'][0],
+                                       temp1=item['temp1'],
+                                       temp2=item['temp2']
+                                       )
 
 
-            lines = json.dumps(dict(item), ensure_ascii=False) + "\n"
-            self.file.write(lines)
+
+            # lines = json.dumps(dict(item), ensure_ascii=False) + "\n"
+            # self.file.write(lines)
             return item
         else:
             return item
 
 
     def spider_closed(self, spider):
-        self.file.close()
-
+        pass
 
 
 
