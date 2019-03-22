@@ -12,7 +12,7 @@ import time
 
 from selenium import webdriver
 
-
+from selenium.webdriver.chrome.options import Options
 #导入django数据库
 import django
 
@@ -36,8 +36,13 @@ class Spider1Spider(scrapy.Spider):
     # driver创建
     def __init__(self):
         PHANTOMJS_PATH = 'E:\python\phantomjs.exe'
-        self.browser = webdriver.PhantomJS(executable_path=PHANTOMJS_PATH,service_args=["--load-images=false", "--disk-cache=true"])
-
+        # self.browser = webdriver.PhantomJS(executable_path=PHANTOMJS_PATH,service_args=["--load-images=false", "--disk-cache=true"])
+        PHANTOMJS_PATH = 'E:\python\chromedriver.exe'
+        chrome_options = Options()
+        chrome_options.add_argument("no-sandbox")
+        # chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')  # 上面三行代码就是为了将Chrome不弹出界面，实现无界面爬取
+        self.browser = webdriver.Chrome(chrome_options=chrome_options, executable_path=PHANTOMJS_PATH)
         self.browser.set_page_load_timeout(30)
     #结束时关闭浏览器
     def closed(self, spider):
@@ -46,12 +51,12 @@ class Spider1Spider(scrapy.Spider):
     def parse(self, response):
         sort_list = [x.sort for x in Category.objects.all()]
         official_list = [{'name': x.name, 'sort': x.sort} for x in Official.objects.all()]
-        for sort in sort_list:
-            sort_url_name = urllib.parse.quote(sort)
-            home_url= 'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%s&ie=utf8&_sug_=n&_sug_type_='% sort_url_name
-            sort=None
-
-            yield Request(home_url, callback=self.getHomepage, meta={"sort": sort})
+        # for sort in sort_list:
+        #     sort_url_name = urllib.parse.quote(sort)
+        #     home_url= 'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%s&ie=utf8&_sug_=n&_sug_type_='% sort_url_name
+        #     sort=None
+        #
+        #     yield Request(home_url, callback=self.getHomepage, meta={"sort": sort})
         for official in  official_list:
             official_url_name = urllib.parse.quote(official.get('name'))
             home_url = 'https://weixin.sogou.com/weixin?type=1&s_from=input&query=%s&ie=utf8&_sug_=n&_sug_type_=' % official_url_name
@@ -70,7 +75,7 @@ class Spider1Spider(scrapy.Spider):
         if(hint==None):
             msg = response.xpath('//*[@class="p2"]/text()').extract()
             if (len(msg) != 0):
-                print (msg[0])
+                print ('出事啦',msg[0])
             page_url_list=response.xpath('//*[@class="tit"]/a/@href').extract()
 
             #推送的类型
@@ -88,7 +93,7 @@ class Spider1Spider(scrapy.Spider):
         else:
             msg = response.xpath('//*[@class="p2"]/text()').extract()
             if (len(msg) != 0):
-                print(msg[0])
+                print('出事啦', msg[0])
             page_url_list = response.xpath('//*[@class="tit"]/a/@href').extract()
 
             # 推送的类型
@@ -125,8 +130,11 @@ class Spider1Spider(scrapy.Spider):
 
             # item发表时间
             pt = publish_time[0]
+            if '年' in pt:
+                ptlist = re.split('[年月日]', pt)
+            else:
 
-            ptlist = re.split('[年月日]', pt)
+                ptlist = re.split('/', pt)
 
             # 相差时间天数
             diff = int(listtime[2]) - int(ptlist[2])

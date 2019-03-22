@@ -114,8 +114,8 @@ RANDOM_UA_TYPE='random'
 ITEM_PIPELINES = {
 #数值越低，组件的优先级越高
 #    'properties.pipelines.PropertiesPipeline': 300,
-'properties.pipelines.jsonpelines': 310,  #把数据写入文件管道
-'properties.pipelines.JiandanPipeline': 300,#下载图片管道
+# 'properties.pipelines.jsonpelines': 310,  #把数据写入文件管道
+# 'properties.pipelines.JiandanPipeline': 300,#下载图片管道
 'properties.pipelines.testpelines': 320,
 
 

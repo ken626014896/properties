@@ -72,13 +72,7 @@ class JiandanPipeline(object):
             #下载正文图片
             for image_url in item['img_url_list']:
                 print('图片地址',image_url)
-                # list_name = image_url.split('/')
-                # file_name = list_name[len(list_name) - 2]  # 图片名称
-                #
-                # #获取数据格式，判断是是jpg还是gif
-                # whichformat=list_name[len(list_name) - 3]
-                # img_format=whichformat.split('_')[1]
-                # print('图片格式是', img_format)
+
                 file_name,img_format=self.getNameAndFormat(image_url)
 
                 img_name=file_name+'.'+img_format
@@ -141,15 +135,11 @@ class JiandanPipeline(object):
         whichformat = list_name[len(list_name) - 3]
         # 得到图片格式
         img_format = whichformat.split('_')[1]
-
+        img_format_list = ['gif', 'png', 'jpg']
+        if img_format not in img_format_list:
+            img_format = img_format_list[1]
         return file_name, img_format
-    # async midtemp
-    #
-    # def dowPicture(self,file_path,img_format,image_url):
-    #             with open(file_path + '.' + img_format, 'wb') as file_writer:
-    #                 conn = request.urlopen(image_url)  # 下载图片
-    #                 file_writer.write(conn.read())
-    #             file_writer.close()
+
 
 #导出到django数据库的中间件
 class jsonpelines(object):
